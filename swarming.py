@@ -27,7 +27,7 @@ class MetaClient(object):
 
 
 def on_message(mosq, obj, msg):
-    print("Message received on topic "+msg.topic+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
+    print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
 
 m = MetaClient(["localhost", "127.0.0.1:1884"])
 m.subscribe('watch')
