@@ -13,9 +13,12 @@ class MetaClient(object):
                 ip, port = a[0], int(a[1])
             m = mosquitto.Mosquitto('swarming')
             m.connect(ip, port=port)
-            m.subscribe('watch')
             m.on_message = on_message
             self.clients.append(m)
+
+    def subscribe(self, path):
+        for client in self.clients:
+            client.subscribe(path)
 
     def loop(self):
         while True:
@@ -27,4 +30,5 @@ def on_message(mosq, obj, msg):
     print("Message received on topic "+msg.topic+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
 
 m = MetaClient(["localhost", "127.0.0.1:1884"])
+m.subscribe('watch')
 m.loop()
