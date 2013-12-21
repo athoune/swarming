@@ -15,7 +15,7 @@ class MetaClient(object):
             m = mosquitto.Mosquitto('swarming')
             m.on_connect = self.on_connect
             m.reconnect_delay_set(30, 3600, True)
-            m.on_message = on_message
+            m.on_message = self.on_message
             m.on_disconnect = self.on_disconnect
             self.clients.append(m)
             m.connect_async(ip, port=port)
@@ -35,6 +35,9 @@ class MetaClient(object):
             for channel in self.channels:
                 mosq.subscribe(channel)
 
+    def on_message(self, mosq, obj, msg):
+        print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
+
     def loop(self):
         while True:
             for client in self.clients:
@@ -43,13 +46,9 @@ class MetaClient(object):
                         client.reconnect()
                     except socket.error:
                         print "*"
-                client.loop(5)
+                client.loop(1)
             print ".",
 
-
-
-def on_message(mosq, obj, msg):
-    print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
 
 m = MetaClient(["localhost", "127.0.0.1:1884"])
 m.subscribe('watch')
