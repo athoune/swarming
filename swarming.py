@@ -5,6 +5,7 @@ class MetaClient(object):
 
     def __init__(self, servers):
         self.clients = []
+        self.channels = set()
         for server in servers:
             a = server.split(":")
             if len(a) == 1:
@@ -12,18 +13,39 @@ class MetaClient(object):
             else:
                 ip, port = a[0], int(a[1])
             m = mosquitto.Mosquitto('swarming')
-            m.connect(ip, port=port)
+            m.on_connect = self.on_connect
+            m.reconnect_delay_set(30, 3600, True)
             m.on_message = on_message
+            m.on_disconnect = self.on_disconnect
             self.clients.append(m)
+            m.connect_async(ip, port=port)
 
     def subscribe(self, path):
+        self.channels.add(path)
+
+    def publish(self, topic, payload=None, qos=0, retain=False):
         for client in self.clients:
-            client.subscribe(path)
+            client.publish(topic, payload, qos, retain)
+
+    def on_disconnect(self, mosq, obj, rc):
+        pass
+
+    def on_connect(self, mosq, obj, rc):
+        if rc == 0:
+            for channel in self.channels:
+                mosq.subscribe(channel)
 
     def loop(self):
         while True:
             for client in self.clients:
-                client.loop()
+                if client._sock == None:
+                    try:
+                        client.reconnect()
+                    except socket.error:
+                        print "*"
+                client.loop(5)
+            print ".",
+
 
 
 def on_message(mosq, obj, msg):
