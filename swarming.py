@@ -24,6 +24,7 @@ class MetaClient(object):
         self.channels.add(path)
 
     def publish(self, topic, payload=None, qos=0, retain=False):
+        # TODO handling dead server, trying later
         for client in self.clients:
             client.publish(topic, payload, qos, retain)
 
@@ -36,6 +37,7 @@ class MetaClient(object):
                 mosq.subscribe(channel)
 
     def on_message(self, mosq, obj, msg):
+        # TODO handling uniq messages
         print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
 
     def loop(self):
