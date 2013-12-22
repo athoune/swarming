@@ -39,7 +39,7 @@ class MetaClient(object):
         print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
 
     def loop(self):
-        p = Popen(['ping', '-c', '10', 'free.fr'], stdout=PIPE)
+        p = Ping('free.fr')
         while True:
             for client in self.clients:
                 if client._sock == None:
@@ -48,12 +48,10 @@ class MetaClient(object):
                     except socket.error:
                         print "*"
                 client.loop(1)
-            if p is not None:
-                r = p.poll()
-                if r is not None:
-                    ping = p.stdout.readlines()[-1][:-1]
-                    self.publish('ping', ping)
-                    p = None
+            p.lazy_start()
+            r = p.poll()
+            if r is not None:
+                self.publish('ping', r)
             print ".",
 
 
