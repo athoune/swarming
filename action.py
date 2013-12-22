@@ -24,11 +24,16 @@ class Action(object):
 
 class Ping(Action):
 
-    def __init__(self, target):
-        self.target = target
+    def __init__(self, *targets):
+        self.targets = targets
+        self.n = -1
 
     def start(self):
-        return ['ping', '-c', '10', self.target]
+        self.n += 1
+        if self.n +1 > len(self.targets):
+            self.n = 0
+        self.args = self.targets[self.n]
+        return ['ping', '-c', '10', self.targets[self.n]]
 
     def read(self):
-        return self.popen.stdout.readlines()[-1][:-1]
+        return self.args, self.popen.stdout.readlines()[-1][:-1]

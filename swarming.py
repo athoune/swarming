@@ -1,4 +1,28 @@
 import mosquitto
+import time
+import socket
+
+from action import Ping
+
+
+class TTLSet(object):
+
+    def __init__(self, ttl=30):
+        self.data = {}
+        self.ttl = ttl
+
+    def add(self, stuff):
+        if stuff not in self.data:
+            self.data[stuff] = time.time()
+
+    def __contains__(self, needle):
+        if needle not in self.data:
+            return False
+        now = time.time()
+        if (now - self.data[needle]) > self.ttl:
+            del self.data[needle]  # Lazy cleanup
+            return False
+        return True
 
 
 class MetaClient(object):
@@ -41,7 +65,7 @@ class MetaClient(object):
         print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
 
     def loop(self):
-        p = Ping('free.fr')
+        p = Ping('free.fr', 'yahoo.fr', 'voila.fr', 'www.doctissimo.fr')
         while True:
             for client in self.clients:
                 if client._sock == None:
@@ -53,7 +77,7 @@ class MetaClient(object):
             p.lazy_start()
             r = p.poll()
             if r is not None:
-                self.publish('ping', r)
+                self.publish('ping', str(r))
             print ".",
 
 
