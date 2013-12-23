@@ -62,7 +62,9 @@ class MetaClient(object):
 
     def on_message(self, mosq, obj, msg):
         # TODO handling uniq messages
-        print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
+        pass
+        # FIXME python3 hates string type mismatch
+        #print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
 
     def loop(self):
         p = Ping('free.fr', 'yahoo.fr', 'voila.fr', 'www.doctissimo.fr')
@@ -72,13 +74,13 @@ class MetaClient(object):
                     try:
                         client.reconnect()
                     except socket.error:
-                        print "*"
+                        print("*")
                 client.loop(1)
             p.lazy_start()
             r = p.poll()
             if r is not None:
                 self.publish('ping', str(r))
-            print ".",
+            print(".",)
 
 
 m = MetaClient(["localhost", "127.0.0.1:1884"])
