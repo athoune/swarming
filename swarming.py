@@ -1,6 +1,7 @@
 import mosquitto
 import socket
 import random
+import json
 
 from action import Ping
 
@@ -75,7 +76,9 @@ class MetaClient(object):
                     self.ping.lazy_start()
                     r = self.ping.poll()
                     if r is not None:
-                        self.publish('ping', str(r))
+                        success, target, message = r
+                        self.publish('ping/%s' % target, json.dumps(
+                            {success: message}))
                 print ".",
             except socket.error as e:
                 print "oups", e
@@ -83,5 +86,4 @@ class MetaClient(object):
 
 m = MetaClient(["localhost", "127.0.0.1:1884"])
 m.subscribe('watch')
-m.subscribe('ping')
 m.loop()

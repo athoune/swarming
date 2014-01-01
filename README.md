@@ -44,6 +44,26 @@ The broker is just a Mosquitto server.
 
 The analyst deduplicates messages and index them for Kibana drills.
 
+
+Trying it
+---------
+
+Launch some mqtt server:
+
+    mosquitto
+
+Launch one listener:
+
+    mosquitto_sub -t "ping/+" -v
+
+Launch the agent:
+
+    python swarming.py
+
+Wait a bit and change the list of targets:
+
+    mosquitto_pub -t watch -m "voila.fr yahoo.cn prout.local palourde.net" -q 1
+
 State of the project
 --------------------
 
