@@ -9,10 +9,14 @@ from action import Ping
 
 class MetaClient(object):
 
-    def __init__(self, servers):
+    def __init__(self, servers, name=None):
         self.client = None
         self.channels = set()
         self.setServers(servers)
+        if name is None:
+            self.name = socket.gethostname()
+        else:
+            self.name = name
 
     def setServers(self, servers):
         random.shuffle(servers)
@@ -78,7 +82,7 @@ class MetaClient(object):
                 if r is not None:
                     success, target, message = r
                     self.publish('ping/%s' % target, json.dumps(
-                        {success: message}))
+                        [self.name, success, message]))
                 print ".",
             except socket.error as e:
                 print "oups", e
