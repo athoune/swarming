@@ -56,14 +56,14 @@ class Ping(Action):
         try:
             r = parse_ping(self.popen.stderr, self.popen.stdout)
         except ActionException as e:
-            return 'error', self.args, e
+            return 'error', self.args, str(e)
         return 'ok', self.args, r
 
 
 def parse_ping(err, out):
     error = err.read()
     if error != '':
-        raise ActionException(error)
+        raise ActionException(error[:-1])
     response = {}
     for line in out.readlines()[-2:]:
         m = PACKET_LOSS.match(line)
