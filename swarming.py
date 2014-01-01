@@ -73,13 +73,12 @@ class MetaClient(object):
         while True:
             try:
                 self.lazy_loop()
-                if self.state == 'connected':
-                    self.ping.lazy_start()
-                    r = self.ping.poll()
-                    if r is not None:
-                        success, target, message = r
-                        self.publish('ping/%s' % target, json.dumps(
-                            {success: message}))
+                self.ping.lazy_start()
+                r = self.ping.poll()
+                if r is not None:
+                    success, target, message = r
+                    self.publish('ping/%s' % target, json.dumps(
+                        {success: message}))
                 print ".",
             except socket.error as e:
                 print "oups", e
