@@ -36,7 +36,7 @@ class MetaClient(object):
         self.client.connect(ip, port=port)
 
     def lazy_loop(self):
-        if self.client is None or self.client._sock is None:
+        if self.client is None or getattr(self.client, '_sock', None) is None:
             self.reconnect()
         self.client.loop()
 
