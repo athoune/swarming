@@ -5,26 +5,6 @@ import socket
 from action import Ping
 
 
-class TTLSet(object):
-
-    def __init__(self, ttl=30):
-        self.data = {}
-        self.ttl = ttl
-
-    def add(self, stuff):
-        if stuff not in self.data:
-            self.data[stuff] = time.time()
-
-    def __contains__(self, needle):
-        if needle not in self.data:
-            return False
-        now = time.time()
-        if (now - self.data[needle]) > self.ttl:
-            del self.data[needle]  # Lazy cleanup
-            return False
-        return True
-
-
 class MetaClient(object):
 
     def __init__(self, servers):
