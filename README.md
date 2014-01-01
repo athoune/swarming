@@ -67,7 +67,10 @@ Wait a bit and change the list of targets:
 State of the project
 --------------------
 
-Fighting with callback, polling and select, the old way
+Fighting with callback, polling and select, the old way.
+
+python-mosquitto package on Debian is old and use ctype binding.
+Current lib is pure python. Paho project is eating Mosquitto.
 
 Python's hard synchronicity is weird when you already put a foot in the land of asynchronicity.
 
