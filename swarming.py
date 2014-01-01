@@ -2,6 +2,7 @@ import mosquitto
 import socket
 import random
 import json
+import sys
 
 from action import Ping
 
@@ -84,6 +85,9 @@ class MetaClient(object):
                 print "oups", e
 
 
-m = MetaClient(["localhost", "127.0.0.1:1884"])
+if len(sys.argv) == 1:
+    m = MetaClient(["localhost", "127.0.0.1:1884"])
+else:
+    m = MetaClient(sys.argv[1:])
 m.subscribe('watch')
 m.loop()
