@@ -48,7 +48,7 @@ class MetaClient(object):
         self.channels.add(path)
 
     def publish(self, topic, payload=None, qos=0, retain=False):
-        self.client.publish(topic, payload, qos, retain)
+        self.client.publish(topic, payload=payload, qos=qos, retain=retain)
 
     def on_disconnect(self, mosq, obj, rc):
         print "disconnect", mosq
@@ -61,7 +61,7 @@ class MetaClient(object):
                 mosq.subscribe(channel)
 
     def on_message(self, mosq, obj, msg):
-        print msg.topic
+        print msg.topic, msg.mid
         print msg.payload
         if msg.topic == "watch":
             print "change watch"
@@ -82,7 +82,7 @@ class MetaClient(object):
                 if r is not None:
                     success, target, message = r
                     self.publish('ping/%s' % target, json.dumps(
-                        [self.name, success, message]))
+                        [self.name, success, message]), qos=1)
                 print ".",
             except socket.error as e:
                 print "oups", e
