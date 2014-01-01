@@ -1,4 +1,4 @@
-import mosquitto
+import paho.mqtt.client as paho
 import socket
 import random
 import json
@@ -27,7 +27,7 @@ class MetaClient(object):
             ip, port = a[0], 1883
         else:
             ip, port = a[0], int(a[1])
-        self.client = mosquitto.Mosquitto('swarming')
+        self.client = paho.Client(None, True)
         self.client.on_connect = self.on_connect
         #self.client.reconnect_delay_set(10, 3600, True)
         self.client.on_message = self.on_message

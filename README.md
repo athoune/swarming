@@ -48,6 +48,10 @@ The analyst deduplicates messages and index them for Kibana drills.
 Trying it
 ---------
 
+Prepare the python stuffs:
+    virtualenv .
+    ./bin/pip install -r requirements.txt
+
 Launch some mqtt server:
 
     mosquitto
@@ -58,7 +62,7 @@ Launch one listener:
 
 Launch the agent:
 
-    python swarming.py
+    ./bin/python swarming.py localhost
 
 Wait a bit and change the list of targets:
 
