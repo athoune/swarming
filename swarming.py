@@ -1,6 +1,6 @@
 import mosquitto
-import time
 import socket
+import random
 
 from action import Ping
 
@@ -8,59 +8,77 @@ from action import Ping
 class MetaClient(object):
 
     def __init__(self, servers):
-        self.clients = []
+        self.client = None
         self.channels = set()
-        for server in servers:
-            a = server.split(":")
-            if len(a) == 1:
-                ip, port = a[0], 1883
-            else:
-                ip, port = a[0], int(a[1])
-            m = mosquitto.Mosquitto('swarming')
-            m.on_connect = self.on_connect
-            m.reconnect_delay_set(30, 3600, True)
-            m.on_message = self.on_message
-            m.on_disconnect = self.on_disconnect
-            self.clients.append(m)
-            m.connect_async(ip, port=port)
+        self.setServers(servers)
+
+    def setServers(self, servers):
+        random.shuffle(servers)
+        self.servers = servers
+        self.n_server = 0
+
+    def reconnect(self):
+        server = self.servers[self.n_server]
+        self.n_server = (self.n_server + 1) % len(self.servers)
+        a = server.split(":")
+        if len(a) == 1:
+            ip, port = a[0], 1883
+        else:
+            ip, port = a[0], int(a[1])
+        self.client = mosquitto.Mosquitto('swarming')
+        self.client.on_connect = self.on_connect
+        #self.client.reconnect_delay_set(10, 3600, True)
+        self.client.on_message = self.on_message
+        self.client.on_disconnect = self.on_disconnect
+        print "try to connect to", ip, port
+        self.client.connect(ip, port=port)
+
+    def lazy_loop(self):
+        if self.client is None or self.client._sock is None:
+            self.reconnect()
+        self.client.loop()
 
     def subscribe(self, path):
         self.channels.add(path)
 
     def publish(self, topic, payload=None, qos=0, retain=False):
-        # TODO handling dead server, trying later
-        for client in self.clients:
-            client.publish(topic, payload, qos, retain)
+        self.client.publish(topic, payload, qos, retain)
 
     def on_disconnect(self, mosq, obj, rc):
-        pass
+        print "disconnect", mosq
 
     def on_connect(self, mosq, obj, rc):
+        print "connect", self.client._host, self.client._port, rc
         if rc == 0:
+            self.state = 'connected'
             for channel in self.channels:
                 mosq.subscribe(channel)
 
     def on_message(self, mosq, obj, msg):
-        # TODO handling uniq messages
-        pass
+        print msg.topic
+        print msg.payload
+        if msg.topic == "watch":
+            print "change watch"
+            targets = msg.payload.split(' ')
+            random.shuffle(targets)
+            self.ping.targets = targets
         # FIXME python3 hates string type mismatch
-        #print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+" with QoS "+str(msg.qos)+" and payload "+msg.payload)
+        #print("Message received on topic "+msg.topic+" with id "+str(msg.mid)+
+        #" with QoS "+str(msg.qos)+" and payload "+msg.payload)
 
     def loop(self):
-        p = Ping('free.fr', 'yahoo.fr', 'voila.fr', 'www.doctissimo.fr')
+        self.ping = Ping('free.fr', 'yahoo.fr', 'voila.fr', 'www.doctissimo.fr')
         while True:
-            for client in self.clients:
-                if client._sock == None:
-                    try:
-                        client.reconnect()
-                    except socket.error:
-                        print("*")
-                client.loop(1)
-            p.lazy_start()
-            r = p.poll()
-            if r is not None:
-                self.publish('ping', str(r))
-            print(".",)
+            try:
+                self.lazy_loop()
+                if self.state == 'connected':
+                    self.ping.lazy_start()
+                    r = self.ping.poll()
+                    if r is not None:
+                        self.publish('ping', str(r))
+                print ".",
+            except socket.error as e:
+                print "oups", e
 
 
 m = MetaClient(["localhost", "127.0.0.1:1884"])
