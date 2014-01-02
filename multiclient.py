@@ -1,3 +1,5 @@
+import socket
+
 import paho.mqtt.client as paho
 
 
@@ -7,10 +9,10 @@ class MultiClient(object):
         self.servers = []
         self.channels = channels
         for server in servers:
-            client = paho.Client(None, True)
+            client = paho.Client(client_id=None, clean_session=True,
+                                 userdata={'host': server})
             client.on_connect = self.on_connect
             client.on_message = self.on_message
-            client.connect(server)
             self.servers.append(client)
 
     def on_connect(self, client, userdata, rc):
@@ -29,5 +31,11 @@ class MultiClient(object):
         print message.payload
 
     def loop(self):
-        for server in self.servers:
-            server.loop()
+        for client in self.servers:
+            try:
+                if client is None or client._sock is None:
+                    client.connect(client._userdata['host'])
+                else:
+                    client.loop()
+            except socket.error as e:
+                print "oups", e
