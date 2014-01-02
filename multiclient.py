@@ -12,6 +12,7 @@ class MultiClient(object):
             client = paho.Client(client_id=None, clean_session=True,
                                  userdata={'host': server})
             client.on_connect = self.on_connect
+            client.on_disconnect = self.on_disconnect
             client.on_message = self.on_message
             self.servers.append(client)
 
@@ -21,6 +22,9 @@ class MultiClient(object):
                 client.subscribe(channel, qos=2)
         else:
             raise Exception('Connection error %i' % rc)
+
+    def on_disconnect(self, client, userdata, rc):
+        print "diconnected", rc
 
     def on_message(self, client, userdata, message):
         if message is None:
