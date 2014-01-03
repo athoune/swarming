@@ -1,9 +1,15 @@
 import json
 
 from multiclient import MultiClient
+from elasticsearch import Elasticsearch
 
 
 class Indexer(MultiClient):
+
+    def __init__(self, servers, channels, elasticsearch):
+        super(Indexer, self).__init__(servers, channels)
+        self.es = elasticsearch
+
     def on_message(self, client, userdata, message):
         if message is None:
             return
@@ -13,7 +19,7 @@ class Indexer(MultiClient):
             agent, success, values = data
             min_, avg, max_, stddev = values[u'Round trip']
             loss = values[u'loss']
-            print agent, topics[1], avg, loss
+            print agent, topics[1], avg, loss, message.timestamp
 
 
 if __name__ == '__main__':
@@ -22,7 +28,8 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 1:
         os.exit()
-    client = Indexer(sys.argv[1:], ['ping/+'])
+    es = Elasticsearch()
+    client = Indexer(sys.argv[1:], ['ping/+'], es)
     while True:
         client.loop()
         print '.',
