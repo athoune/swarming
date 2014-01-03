@@ -9,12 +9,12 @@ class MultiClient(object):
         self.servers = []
         self.channels = channels
         for server in servers:
-            client = paho.Client(client_id=None, clean_session=True,
-                                 userdata={'host': server})
+            client = paho.Client(client_id=None, clean_session=True)
             client.on_connect = self.on_connect
             client.on_disconnect = self.on_disconnect
             client.on_message = self.on_message
             self.servers.append(client)
+            client.connect_async(server)
 
     def on_connect(self, client, userdata, rc):
         if rc == 0:
@@ -37,8 +37,8 @@ class MultiClient(object):
     def loop(self):
         for client in self.servers:
             try:
-                if client is None or client._sock is None:
-                    client.connect(client._userdata['host'])
+                if client._sock is None:
+                    client.reconnect()
                 else:
                     client.loop()
             except socket.error as e:
