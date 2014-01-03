@@ -7,7 +7,7 @@ from elasticsearch import Elasticsearch
 class Indexer(MultiClient):
 
     def __init__(self, servers, channels, elasticsearch):
-        super(Indexer, self).__init__(servers, channels)
+        super(Indexer, self).__init__(servers, channels, prefix="indexer")
         self.es = elasticsearch
 
     def on_message(self, client, userdata, message):

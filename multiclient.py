@@ -5,11 +5,11 @@ import paho.mqtt.client as paho
 
 class MultiClient(object):
 
-    def __init__(self, servers, channels):
+    def __init__(self, servers, channels, prefix=""):
         self.servers = []
         self.channels = channels
         for server in servers:
-            client = paho.Client(client_id=None, clean_session=True)
+            client = paho.Client(client_id="sw/%s/%s" % (prefix, socket.gethostname()))
             client.on_connect = self.on_connect
             client.on_disconnect = self.on_disconnect
             client.on_message = self.on_message
