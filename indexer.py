@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from multiclient import MultiClient
 from elasticsearch import Elasticsearch
@@ -9,6 +10,7 @@ class Indexer(MultiClient):
     def __init__(self, servers, channels, elasticsearch):
         super(Indexer, self).__init__(servers, channels, prefix="indexer")
         self.es = elasticsearch
+        self.last_index = None
 
     def on_message(self, client, userdata, message):
         if message is None:
@@ -19,7 +21,34 @@ class Indexer(MultiClient):
             agent, success, values = data
             min_, avg, max_, stddev = values[u'Round trip']
             loss = values[u'loss']
-            print agent, topics[1], avg, loss, message.timestamp
+            dt = datetime.fromtimestamp(message.timestamp)
+            idx = dt.date().strftime('logstash-%Y.%m.%d')
+            if idx != self.last_index:
+                self.last_index = idx
+                self.es.indices.create(idx,body={
+                    'mappings':{
+                        'ping': {
+                            'properties': {
+                                '@timestamp': {
+                                    'type': 'date'
+                                }
+                            }
+                        }
+                    }
+                })
+            print self.es.index(index=idx, doc_type='ping', body={
+                '@timestamp':dt.strftime('%Y-%m-%dT%H:%M:%S.000+01:00'),
+                '@version':1,
+                'message': "",
+                'agent':agent,
+                'target':topics[1],
+                'avg': avg,
+                'min':min_,
+                'max':max_,
+                'stddev':stddev,
+                'loss':loss
+            }
+            )
 
 
 if __name__ == '__main__':
