@@ -23,7 +23,7 @@ class Indexer(MultiClient):
             loss = values[u'loss']
             dt = datetime.fromtimestamp(message.timestamp)
             idx = dt.date().strftime('logstash-%Y.%m.%d')
-            if idx != self.last_index:
+            if idx != self.last_index and not self.es.indices.exists(idx):
                 self.last_index = idx
                 self.es.indices.create(idx,body={
                     'mappings':{
