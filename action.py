@@ -50,7 +50,7 @@ class Ping(Action):
         if self.n + 1 > len(self.targets):
             self.n = 0
         self.args = self.targets[self.n]
-        return ['ping', '-c', '10', self.targets[self.n]]
+        return ['ping', '-c', '10', self.args]
 
     def read(self):
         try:
@@ -73,3 +73,16 @@ def parse_ping(err, out):
         if m:
             response['Round trip'] = [float(a) for a in m.group(3, 4, 5, 6)]
     return response
+
+
+if __name__ == '__main__':
+    p = Ping('voila.fr')
+    while True:
+        p.lazy_start()
+        data = p.poll()
+        if data is None:
+            print "#",
+            time.sleep(1)
+        else:
+            print data
+            break
