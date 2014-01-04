@@ -24,7 +24,7 @@ Agent use harcoded wait time and cannot be used to DOS anything larger than an A
 Agent should store message that it can't send, it continues is duty, even without online broker.
 Agent should use TLS certificate authentication.
 
-The _analyst_, another mqtt client, listen for results, removes duplicates and index messages.
+The _indexer_, another mqtt client, listen for results, and index messages.
 
 ### Agents
 
@@ -41,10 +41,10 @@ Python 3 needs more loves.
 
 The broker is just a Mosquitto server. Any MQTT 3.1 server should work.
 
-### Analyst
+### Indexer
 
-The analyst deduplicates messages and index them for Kibana drills.
-
+The indexer index messages for Kibana drills.
+![Kibana screenshot](https://raw.github.com/athoune/swarming/master/kibana.png "Kibana screenshot")
 
 Trying it
 ---------
@@ -85,6 +85,6 @@ Python's hard synchronicity is weird when you already put a foot in the land of 
  * √ Subprocess for ping
  * √ Publish a result to its own chan
  * √ Listen for targets, and use them
- * _ Deduplicates and index messages
+ * √ Index messages
  * _ Guess connection type
  * _ Httping
