@@ -9,7 +9,9 @@ class MultiClient(object):
         self.servers = []
         self.channels = channels
         for server in servers:
-            client = paho.Client(client_id="sw/%s/%s" % (prefix, socket.gethostname()))
+            client = paho.Client(client_id="sw/%s/%s" %
+                                 (prefix, socket.gethostname()),
+                                 clean_session=False)
             client.on_connect = self.on_connect
             client.on_disconnect = self.on_disconnect
             client.on_message = self.on_message
