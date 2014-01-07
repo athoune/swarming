@@ -19,7 +19,7 @@ class Indexer(MultiClient):
         topics = message.topic.split('/')
         if topics[0] == u'ping':
             agent, success, values = data
-            if success is not 'ok':
+            if success != 'ok':
                 return
             min_, avg, max_, stddev = values[u'Round trip']
             loss = values[u'loss']
