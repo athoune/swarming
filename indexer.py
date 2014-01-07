@@ -27,7 +27,7 @@ class Indexer(MultiClient):
             idx = dt.date().strftime('logstash-%Y.%m.%d')
             if idx != self.last_index and not self.es.indices.exists(idx):
                 self.last_index = idx
-                self.es.indices.create(idx,body={
+                self.es.indices.create(idx, body={
                     'mappings':{
                         'ping': {
                             'properties': {
