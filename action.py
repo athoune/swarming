@@ -6,7 +6,7 @@ import re
 PACKET_LOSS = re.compile(r".* ([\d.]+)% packet loss.*")
 # round-trip min/avg/max/stddev = 366.381/377.219/421.605/15.761 ms
 ROUND_TRIP = re.compile(r"(round-trip|rtt) min/avg/max/(std|m)dev = ([\d.]+)/([\d.]+)/([\d.]+)/([\d.]+) ms")
-
+UNKNOWN_HOST = re.compile(r"cannot resolve .*?: Unknown host")
 
 class Action(object):
     popen = None
@@ -57,14 +57,17 @@ class Ping(Action):
             r = parse_ping(self.popen.stderr, self.popen.stdout)
         except ActionException as e:
             return 'error', self.args, str(e)
-        return 'ok', self.args, r
+        if r['Error'] is None:
+            return 'ok', self.args, r
+        else:
+            return 'error', self.args, r['Error']
 
 
 def parse_ping(err, out):
     error = err.read()
     if error != '':
         raise ActionException(error[:-1])
-    response = {}
+    response = {'Error': None}
     for line in out.readlines()[-2:]:
         m = PACKET_LOSS.match(line)
         if m:
@@ -72,6 +75,9 @@ def parse_ping(err, out):
         m = ROUND_TRIP.match(line)
         if m:
             response['Round trip'] = [float(a) for a in m.group(3, 4, 5, 6)]
+        m = UNKNOWN_HOST.match(line)
+        if m:
+            response['Error'] = "Unknown host"
     return response
 
 
