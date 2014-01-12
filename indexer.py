@@ -55,10 +55,9 @@ class Indexer(MultiClient):
 
 if __name__ == '__main__':
     import sys
-    import os
 
     if len(sys.argv) == 1:
-        os.exit()
+        sys.exit()
     es = Elasticsearch()
     client = Indexer(sys.argv[1:], ['ping/+'], es)
     while True:
