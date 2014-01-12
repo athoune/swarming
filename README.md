@@ -70,6 +70,10 @@ Wait a bit and change the list of targets:
 
     mosquitto_pub -t watch -m "voila.fr yahoo.cn prout.local palourde.net" -q 1
 
+Watch for dead peoples:
+
+    mosquitto_sub -t rip/# -h localhost -v
+
 State of the project
 --------------------
 

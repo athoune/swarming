@@ -31,7 +31,9 @@ class MetaClient(object):
             ip, port = a[0], 1883
         else:
             ip, port = a[0], int(a[1])
-        self.client = paho.Client('ping/%s' % socket.gethostname(), False)
+        hostname = socket.gethostname()
+        self.client = paho.Client('ping/%s' % hostname, False)
+        self.client.will_set('rip/agent/%s' % hostname, qos=1)
         self.client.on_connect = self.on_connect
         #self.client.reconnect_delay_set(10, 3600, True)
         self.client.on_message = self.on_message
