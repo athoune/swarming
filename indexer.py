@@ -15,42 +15,74 @@ class Indexer(MultiClient):
     def on_message(self, client, userdata, message):
         if message is None:
             return
-        data = json.loads(message.payload)
+        if message.payload is not None and len(message.payload) > 0:
+            data = json.loads(message.payload)
+        else:
+            data = None
         topics = message.topic.split('/')
         if topics[0] == u'ping':
-            agent, success, values = data
-            if success != 'ok':
-                return
-            min_, avg, max_, stddev = values[u'Round trip']
-            loss = values[u'loss']
-            dt = datetime.fromtimestamp(message.timestamp)
-            idx = dt.date().strftime('logstash-%Y.%m.%d')
-            if idx != self.last_index and not self.es.indices.exists(idx):
-                self.last_index = idx
-                self.es.indices.create(idx, body={
-                    'mappings':{
-                        'ping': {
-                            'properties': {
-                                '@timestamp': {
-                                    'type': 'date'
-                                }
+            self.on_ping(topics, data, message.timestamp)
+        elif topics[0] == u'rip':
+            self.on_rip(topics, message.timestamp)
+        else:
+            print(u"Strange topics : %s" % topics)
+
+    def lazy_index(self, dt):
+        idx = dt.date().strftime('logstash-%Y.%m.%d')
+        if idx != self.last_index and not self.es.indices.exists(idx):
+            self.last_index = idx
+            self.es.indices.create(idx, body={
+                'mappings': {
+                    'ping': {
+                        'properties': {
+                            '@timestamp': {
+                                'type': 'date'
+                            }
+                        }
+                    },
+                    'rip': {
+                        'properties': {
+                            '@timestamp': {
+                                'type': 'date'
                             }
                         }
                     }
-                })
-            print self.es.index(index=idx, doc_type='ping', body={
-                '@timestamp':dt.strftime('%Y-%m-%dT%H:%M:%S.000+01:00'),
-                '@version':1,
-                'message': "",
-                'agent':agent,
-                'target':topics[1],
-                'avg': avg,
-                'min':min_,
-                'max':max_,
-                'stddev':stddev,
-                'loss':loss
-            }
-            )
+                }
+            })
+        return idx
+
+    def on_rip(self, topics, timestamp):
+        dt = datetime.fromtimestamp(timestamp)
+        idx = self.lazy_index(dt)
+        agent = topics[2]  # Assuming just agent is dying
+        print(self.es.index(index=idx, doc_type='rip', body={
+            '@timestamp': dt.strftime('%Y-%m-%dT%H:%M:%S.000+01:00'),
+            '@version': 1,
+            'message': "",
+            'agent': agent
+        }))
+
+    def on_ping(self, topics, data, timestamp):
+        agent, success, values = data
+        if success != 'ok':
+            return
+        min_, avg, max_, stddev = values[u'Round trip']
+        loss = values[u'loss']
+        dt = datetime.fromtimestamp(timestamp)
+        idx = self.lazy_index(dt)
+        print(self.es.index(index=idx, doc_type='ping', body={
+            '@timestamp': dt.strftime('%Y-%m-%dT%H:%M:%S.000+01:00'),
+            '@version': 1,
+            'message': "",
+            'agent': agent,
+            'target': topics[1],
+            'avg': avg,
+            'min': min_,
+            'max': max_,
+            'stddev': stddev,
+            'loss': loss
+        }
+        ))
 
 
 if __name__ == '__main__':
@@ -59,7 +91,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         sys.exit()
     es = Elasticsearch()
-    client = Indexer(sys.argv[1:], ['ping/+'], es)
+    client = Indexer(sys.argv[1:], ['ping/+', 'rip/#'], es)
     while True:
         client.loop()
         print '.',
