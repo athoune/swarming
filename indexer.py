@@ -66,10 +66,13 @@ class Indexer(MultiClient):
         agent, success, values = data
         if success != 'ok':
             return
-        min_, avg, max_, stddev = values[u'Round trip']
-        loss = values[u'loss']
         dt = datetime.fromtimestamp(timestamp)
         idx = self.lazy_index(dt)
+        if values['loss'] == 100.0:
+            min_, avg, max_, stddev = [None, None, None, None]
+        else:
+            min_, avg, max_, stddev = values[u'Round trip']
+        loss = values[u'loss']
         print(self.es.index(index=idx, doc_type='ping', body={
             '@timestamp': dt.strftime('%Y-%m-%dT%H:%M:%S.000+01:00'),
             '@version': 1,
